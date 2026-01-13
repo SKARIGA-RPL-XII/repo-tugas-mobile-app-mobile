@@ -10,11 +10,13 @@ import {
 import { useState } from "react";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
   try {
@@ -34,7 +36,15 @@ export default function Login() {
       return;
     }
 
-    Alert.alert('Success', `Login sebagai ${data.role}`);
+    const userRole = data.user.role;
+    if (userRole === 'admin') {
+        router.replace("/admin/dashboard");
+      } else if (userRole === 'user') {
+        router.replace("/user/dashboard" as any);
+      } else {
+        Alert.alert('Error', 'Role tidak dikenali');
+      }
+
   } catch (err) {
     console.error(err);
     Alert.alert('Error', 'Server tidak dapat dihubungi');
