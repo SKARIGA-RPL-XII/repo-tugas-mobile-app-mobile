@@ -41,3 +41,24 @@ app-example
 # generated native folders
 /ios
 /android
+
+# ===============================
+# MONOREPO (frontend + backend)
+# ===============================
+**/node_modules/
+**/.expo/
+**/.expo-shared/
+
+# Backend
+**/.env
+
+# Editor
+.vscode/
+.idea/
+
+# Design / assets lokal
+Design MockUp/
+desain/
+
+# Windows
+Thumbs.db
