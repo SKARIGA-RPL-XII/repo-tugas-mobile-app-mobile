@@ -7,9 +7,133 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
-} from 'react-native';
-import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+  useWindowDimensions,
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+// 1. IMPORT CONTEXT (Pastikan path-nya sesuai lokasi file OrderContext.tsx kamu)
+import { useOrder } from "../../../context/OrderContext"; 
+
+type CategoryKey = "makanan" | "minuman" | "dessert";
+
+type MenuItem = {
+  name: string;
+  desc: string;
+  price: string;
+  imageUri: string;
+  hot?: boolean;
+  tag?: string;
+};
+
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+const categories: { key: CategoryKey; icon: any }[] = [
+  { key: "makanan", icon: "hamburger" },
+  { key: "minuman", icon: "cup" },
+  { key: "dessert", icon: "cupcake" },
+];
+
+const MENU_DATA: Record<CategoryKey, MenuItem[]> = {
+  makanan: [
+    {
+      name: "Ayam Bakar Madu",
+      desc: "Ayam e bosok, Gak usah tuku nang kene",
+      price: "24.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1525755662778-989d0524087e?q=80&w=1200&auto=format&fit=crop",
+      hot: true,
+      tag: "Paling laris",
+    },
+    {
+      name: "Nasi Ayam Geprek",
+      desc: "Kriuk sambal pedas",
+      price: "18.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop",
+      tag: "Pedas",
+    },
+    {
+      name: "Pasta Creamy Mushroom",
+      desc: "Jamur dengan saus gurih",
+      price: "32.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=1200&auto=format&fit=crop",
+    },
+    {
+      name: "Salad Quinoa",
+      desc: "Segar, ringan, kaya serat",
+      price: "28.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=1200&auto=format&fit=crop",
+    },
+  ],
+  minuman: [
+    {
+      name: "Matcha Latte",
+      desc: "Creamy, earthy, sedikit manis",
+      price: "22.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=1200&auto=format&fit=crop",
+      hot: true,
+      tag: "Favorit sore",
+    },
+    {
+      name: "Es Kopi Susu",
+      desc: "Robusta, susu segar, gula aren",
+      price: "19.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1200&auto=format&fit=crop",
+    },
+    {
+      name: "Lychee Sparkling",
+      desc: "Leci dingin, sedikit soda",
+      price: "17.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1582719478248-51e37d2c2cbe?q=80&w=1200&auto=format&fit=crop",
+    },
+    {
+      name: "Cold Brew Citrus",
+      desc: "Kopi dingin, irisan jeruk",
+      price: "21.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1485808191679-5f86510681a2?q=80&w=1200&auto=format&fit=crop",
+    },
+  ],
+  dessert: [
+    {
+      name: "Tiramisu",
+      desc: "Mascarpone lembut",
+      price: "27.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1505253758473-96b7015fcd40?q=80&w=1200&auto=format&fit=crop",
+      hot: true,
+      tag: "Mood booster",
+    },
+    {
+      name: "Panna Cotta",
+      desc: "Vanilla bean, berry compote",
+      price: "23.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1464306076886-da185f6a9d05?q=80&w=1200&auto=format&fit=crop",
+    },
+    {
+      name: "Brownies Fudge",
+      desc: "Dark chocolate legit",
+      price: "16.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop",
+    },
+    {
+      name: "Mango Sticky Rice",
+      desc: "Ketan wangi, santan gurih",
+      price: "24.000",
+      imageUri:
+        "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=1200&auto=format&fit=crop",
+    },
+  ],
+};
 
 export default function UserDashboard() {
   const [search, setSearch] = useState('');
