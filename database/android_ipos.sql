@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 16, 2026 at 09:20 AM
+-- Generation Time: Jan 16, 2026 at 02:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,9 +45,18 @@ CREATE TABLE `menus` (
   `nama` varchar(250) NOT NULL,
   `deskripsi` text NOT NULL,
   `foto` varchar(250) NOT NULL,
-  `harga` int(50) NOT NULL,
+  `harga` decimal(15,2) NOT NULL,
   `kategori` enum('makanan','minuman','dessert') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `menus`
+--
+
+INSERT INTO `menus` (`id`, `nama`, `deskripsi`, `foto`, `harga`, `kategori`) VALUES
+(1, 'Zundapp bmw750', 'Sepada montor zundapp frontend bla dyftdrtdgcfd rdfcfgdt tgfttuy', 'menu-1768569349901-851248932.jpeg', 15000000000.00, 'makanan'),
+(2, 'Panzerwagen XII konigstiger ', 'Tank dust dust geda gedigedayo', 'menu-1768562829458-60366628.jpeg', 150000000.00, 'dessert'),
+(3, 'Panzerwagen VII panther', 'Panther ngeng ngeng engegnegegegegnege ', 'menu-1768563110546-794945794.jpeg', 50000000.00, 'minuman');
 
 -- --------------------------------------------------------
 
@@ -110,7 +119,7 @@ ALTER TABLE `meja`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `id` int(50) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(50) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `users`

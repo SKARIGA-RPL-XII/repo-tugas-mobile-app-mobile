@@ -8,8 +8,7 @@ import {
 } from "react-native";
 import {
   Ionicons,
-  MaterialCommunityIcons,
-  FontAwesome6,
+  MaterialCommunityIcons
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
@@ -17,11 +16,33 @@ import { useEffect, useState } from "react";
 import { router, useRouter } from "expo-router";
 import { Image } from "react-native";
 import AdminFooter from "../components/adminFooter";
+import CustomAlert from "../components/customAlert";
 
 export default function AdminDashboard() {
   const [showMenu, setShowMenu] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: 'warning' as 'warning' | 'success' | 'error',
+    title: '',
+    onConfirm: undefined as (() => void) | undefined
+  });
+
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState(null);
+  const dummyOrders = [
+    {
+      id: 1,
+      title: "Order No 1",
+      time: "1 minute ago",
+      items: "Ayam bumbu balado 2x, ikan kakap 3x, es teh 20x",
+    },
+    {
+      id: 2,
+      title: "Order No 2",
+      time: "1 minute ago",
+      items: "Burger bangor, Bebek goreng 10x, es teh 2x",
+    },
+  ];
 
   useEffect(() => {
     const getUser = async () => {
@@ -36,9 +57,55 @@ export default function AdminDashboard() {
     getUser();
   }, []);
 
+  const handleLogoutRequest = () => {
+    setShowMenu(false);
+    setAlertConfig({
+      visible: true,
+      type: 'warning',
+      title: 'Apakah Anda yakin ingin Logout?',
+      onConfirm: confirmLogout
+    });
+  };
+
+  const confirmLogout = async () => {
+  setAlertConfig(prev => ({ ...prev, visible: false }));
+
+  try {
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("user");
+    
+    setTimeout(() => {
+      setAlertConfig({
+        visible: true,
+        type: 'success',
+        title: 'Logout Berhasil',
+        // Saat diklik Oke, langsung pindah ke login
+        onConfirm: () => {
+           setAlertConfig(prev => ({ ...prev, visible: false }));
+           router.replace("/login");
+        }
+      });
+    }, 500);
+  } catch (e) {
+    setAlertConfig({
+      visible: true,
+      type: 'error',
+      title: 'Gagal Logout',
+      onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+    });
+  }
+};
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.mainContainer}>
+        <CustomAlert 
+          visible={alertConfig.visible}
+          type={alertConfig.type}
+          title={alertConfig.title}
+          onClose={() => setAlertConfig({ ...alertConfig, visible: false })}
+          onConfirm={alertConfig.onConfirm}
+        />
         <ScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
@@ -68,12 +135,7 @@ export default function AdminDashboard() {
                 <View style={styles.dropdownMenu}>
                   <Pressable
                     style={styles.dropdownItem}
-                    onPress={async () => {
-                      await AsyncStorage.removeItem("token");
-                      await AsyncStorage.removeItem("user");
-                      setShowMenu(false);
-                      router.replace("/login");
-                    }}
+                    onPress={handleLogoutRequest} 
                   >
                     <Ionicons name="log-out-outline" size={18} color="black" />
                     <Text style={styles.dropdownText}>Logout</Text>
@@ -112,6 +174,20 @@ export default function AdminDashboard() {
               <Text style={styles.chartText}>Chart Penghasilan</Text>
             </View>
           </View>
+
+          {/* ORDER */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Order</Text>
+
+            {dummyOrders.map((order) => (
+              <OrderCard
+                key={order.id}
+                title={order.title}
+                time={order.time}
+                items={order.items}
+              />
+            ))}
+          </View>
         </ScrollView>
 
         <AdminFooter />
@@ -142,6 +218,27 @@ function StatCard({ title, value, icon, trend }: StatCardProps) {
       <View style={styles.statFooter}>
         <Text style={styles.statFooterText}>Update</Text>
       </View>
+    </View>
+  );
+}
+
+interface OrderCardProps {
+  title: string;
+  time: string;
+  items: string;
+}
+
+function OrderCard({ title, time, items }: OrderCardProps) {
+  return (
+    <View style={styles.orderCard}>
+      <View style={styles.orderHeader}>
+        <Text style={styles.orderTitle}>{title}</Text>
+        <Text style={styles.orderTime}>{time}</Text>
+      </View>
+
+      <Text style={styles.orderItems}>
+        <Text style={{ fontWeight: "700" }}>Pesanan :</Text> {items}
+      </Text>
     </View>
   );
 }
@@ -292,5 +389,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#ddd",
+  },
+  orderCard: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+  },
+
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+
+  orderTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+
+  orderTime: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+
+  orderItems: {
+    fontSize: 14,
+    color: "#374151",
+    lineHeight: 20,
   },
 });
