@@ -4,7 +4,7 @@ const db = require('./config/db');
 const adminData = {
   nama: 'Ravlor',
   email: 'ravlor@email.com',
-  password: '532008',
+  password: '5553322',
   no_telepon: '08123456789',
   roles: 'admin'
 };

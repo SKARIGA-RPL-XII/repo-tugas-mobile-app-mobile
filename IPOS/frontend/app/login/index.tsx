@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -36,11 +37,14 @@ export default function Login() {
       return;
     }
 
+    await AsyncStorage.setItem('token', data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(data.user));
+
     const userRole = data.user.role;
     if (userRole === 'admin') {
         router.replace("/admin/dashboard");
       } else if (userRole === 'user') {
-        router.replace("/user/dashboard" as any);
+        router.replace("/user/dashboard");
       } else {
         Alert.alert('Error', 'Role tidak dikenali');
       }
