@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -136,84 +136,204 @@ const MENU_DATA: Record<CategoryKey, MenuItem[]> = {
 };
 
 export default function UserDashboard() {
-  const [search, setSearch] = useState('');
+  const router = useRouter();
+  
+  // 2. PANGGIL DATA KERANJANG
+  const { cart } = useOrder(); 
+  // Hitung total item di keranjang untuk badge
+  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState<CategoryKey>("makanan");
+  const { width } = useWindowDimensions();
+
+  // Responsif: pakai clamp supaya proporsional di semua device
+  const screenPadding = clamp(width * 0.045, 14, 22);
+  const gap = clamp(width * 0.04, 12, 18);
+  const cardWidth = useMemo(() => (width - screenPadding * 2 - gap) / 2, [width, screenPadding, gap]);
+  const bannerHeight = clamp(width * 0.55, 190, 240);
+  const chipSize = clamp(width * 0.14, 46, 56);
+  const cardImgHeight = clamp(cardWidth * 0.7, 120, 150);
+
+  const handleBack = useCallback(() => {
+    Alert.alert(
+      "Keluar",
+      "Anda ingin kembali ke halaman login?",
+      [
+        { text: "Tidak", style: "cancel" },
+        { text: "Ya", style: "destructive", onPress: () => router.replace("/login") },
+      ],
+      { cancelable: true },
+    );
+  }, [router]);
+
+  const filteredMenus = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    const list = MENU_DATA[activeCat];
+    if (!keyword) return list;
+    return list.filter(
+      (item) => item.name.toLowerCase().includes(keyword) || item.desc.toLowerCase().includes(keyword)
+    );
+  }, [activeCat, search]);
+
+  const sectionTitle =
+    activeCat === "makanan"
+      ? "Menu Makanan"
+      : activeCat === "minuman"
+        ? "Menu Minuman"
+        : "Menu Dessert";
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* HEADER & SEARCH */}
-      <View style={styles.header}>
-        <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <View style={styles.searchBar}>
-          <TextInput
-            placeholder="Search"
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
-          />
-          <Ionicons name="search" size={20} color="#999" />
-        </View>
-      </View>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 90, paddingTop: 8, backgroundColor: "#F5F7F6" }}
+      >
+        {/* Top Bar */}
+        <View style={[styles.topBar, { paddingHorizontal: screenPadding }]}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={22} color="#0C513F" />
+          </TouchableOpacity>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* BANNER PROMO */}
-        <View style={styles.bannerContainer}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1000&auto=format&fit=crop' }}
-            style={styles.bannerImage}
-          />
-        </View>
+          <View style={styles.userMeta}>
+            <Text style={styles.greeting}>Hai, Foodie!</Text>
+            <Text style={styles.subGreeting}>Kurasi menu segar setiap hari</Text>
+            <View style={styles.metaBadge}>
+              <Ionicons name="time-outline" size={12} color="#0C513F" />
+              <Text style={styles.metaBadgeText}>Order buka s/d 22.00</Text>
+            </View>
+          </View>
 
-        {/* KATEGORI */}
-        <View style={styles.categoryRow}>
-          <TouchableOpacity style={[styles.catCircle, styles.catActive]}>
-             <MaterialCommunityIcons name="hamburger" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.catCircle}>
-             <MaterialCommunityIcons name="food-apple" size={24} color="#FFA500" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.catCircle}>
-             <MaterialCommunityIcons name="cupcake" size={24} color="#FF69B4" />
-          </TouchableOpacity>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>DK</Text>
+          </View>
         </View>
 
-        {/* MENU SECTION */}
-        <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Menu Makanan</Text>
-          
-          <View style={styles.menuGrid}>
-            <MenuCard 
-              name="Chicken Burger" 
-              desc="Cheesy Mozarella" 
-              price="12,000" 
-              isHot={true}
-            />
-            <MenuCard 
-              name="Chicken Burger" 
-              desc="Cheesy Mozarella" 
-              price="12,000" 
-              isHot={false}
+        {/* Search */}
+        <View style={[styles.searchRow, { paddingHorizontal: screenPadding }]}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={18} color="#9AA0A6" />
+            <TextInput
+              placeholder="Cari menu, rasa, atau topping"
+              placeholderTextColor="#9AA0A6"
+              value={search}
+              onChangeText={setSearch}
+              style={styles.searchInput}
             />
           </View>
+
+          <TouchableOpacity style={styles.filterBtn}>
+            <Ionicons name="options-outline" size={18} color="#0C513F" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Banner */}
+        <View style={[styles.bannerWrap, { paddingHorizontal: screenPadding }]}>
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1400&auto=format&fit=crop",
+            }}
+            style={[styles.banner, { height: bannerHeight }]}
+          />
+        </View>
+
+        {/* Info Row */}
+        <View style={[styles.infoRow, { paddingHorizontal: screenPadding, gap }]}>
+          <InfoCard icon="leaf" title="Sehat" subtitle="Bahan segar harian" />
+          <InfoCard icon="flash" title="Cepat" subtitle="< 20 menit" />
+          <InfoCard icon="shield-check" title="Higienis" subtitle="Dapur tersertifikasi" />
+        </View>
+
+        {/* Category Chips */}
+        <View style={[styles.chipsRow, { paddingHorizontal: screenPadding, gap }]}>
+          {categories.map((cat) => (
+            <CategoryChip
+              key={cat.key}
+              size={chipSize}
+              icon={cat.icon}
+              active={activeCat === cat.key}
+              onPress={() => setActiveCat(cat.key)}
+            />
+          ))}
+        </View>
+
+        {/* Section Header */}
+        <View style={[styles.sectionHeader, { paddingHorizontal: screenPadding }]}>
+          <View>
+            <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+            <Text style={styles.sectionHint}>{filteredMenus.length} rekomendasi khusus buatmu</Text>
+          </View>
+          <TouchableOpacity style={styles.sortBtn} activeOpacity={0.85}>
+            <Ionicons name="sparkles-outline" size={16} color="#0C513F" />
+            <Text style={styles.sortText}>Kurasi</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* MENU GRID */}
+        <View
+          style={{
+            paddingHorizontal: screenPadding,
+            flexDirection: "row",
+            flexWrap: "wrap",
+            columnGap: gap,
+            rowGap: gap,
+          }}
+        >
+          {filteredMenus.map((item) => (
+            <MenuCard 
+                key={item.name} 
+                width={cardWidth} 
+                imgHeight={cardImgHeight} 
+                {...item} 
+                // 3. TAMBAHKAN NAVIGASI KE DETAIL SAAT CARD DIKLIK
+                onPress={() => router.push({
+                    pathname: "/user/dashboard/detail",
+                    params: { 
+                        name: item.name, 
+                        price: item.price, 
+                        desc: item.desc, 
+                        imageUri: item.imageUri 
+                    }
+                })}
+            />
+          ))}
+
+          {filteredMenus.length === 0 && (
+            <View style={[styles.emptyState, { width: width - screenPadding * 2 }]}>
+              <Ionicons name="leaf-outline" size={18} color="#1F8A45" />
+              <Text style={styles.emptyText}>Menu belum ditemukan. Coba kata kunci lain.</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* BOTTOM NAVIGATION */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navActive}>
-          <Ionicons name="home-outline" size={24} color="black" />
+      {/* BOTTOM NAV */}
+      <View style={[styles.bottomNav, { paddingHorizontal: screenPadding }]}>
+        <TouchableOpacity style={[styles.navItem, styles.navActive]}>
+          <Ionicons name="home-outline" size={22} color="#0C513F" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="notifications-outline" size={24} color="black" />
+
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/user/dashboard/notification')}>
+          <Ionicons name="notifications-outline" size={22} color="#0C513F" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="person-outline" size={24} color="black" />
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.push("/user/dashboard/profil")}
+        >
+          <Ionicons name="person-outline" size={22} color="#0C513F" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cartIcon}>
-          <Ionicons name="cart-outline" size={24} color="black" />
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>4</Text>
+
+        {/* 4. TOMBOL KERANJANG (NAVIGASI + BADGE) */}
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/user/dashboard/cart')}>
+          <View style={styles.cartWrap}>
+            <Ionicons name="cart-outline" size={22} color="#0C513F" />
+            {/* Tampilkan Badge Merah jika ada item */}
+            {totalItems > 0 && (
+                <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{totalItems}</Text>
+                </View>
+            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -221,167 +341,285 @@ export default function UserDashboard() {
   );
 }
 
-/* ===== SUB-KOMPONEN MENU CARD ===== */
-function MenuCard({ name, desc, price, isHot }: { name: string, desc: string, price: string, isHot: boolean }) {
+// --- COMPONENTS ---
+
+function InfoCard({ icon, title, subtitle }: { icon: any; title: string; subtitle: string }) {
   return (
-    <View style={styles.card}>
-      {isHot && (
-        <View style={styles.hotBadge}>
-          <Text>🔥</Text>
-        </View>
-      )}
-      <Image
-        source={{ uri: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=1000&auto=format&fit=crop' }}
-        style={styles.menuImage}
-      />
-      <View style={styles.cardInfo}>
-        <Text style={styles.menuName}>{name}</Text>
-        <Text style={styles.menuDesc}>{desc}</Text>
-        <Text style={styles.menuPrice}><Text style={{fontSize: 10}}>Rp</Text> {price}</Text>
-      </View>
+    <View style={styles.infoCard}>
+      <MaterialCommunityIcons name={icon} size={18} color="#0C513F" />
+      <Text style={styles.infoTitle}>{title}</Text>
+      <Text style={styles.infoSubtitle}>{subtitle}</Text>
     </View>
   );
 }
 
-/* ===== STYLES ===== */
+function CategoryChip({
+  icon,
+  active,
+  onPress,
+  size,
+}: {
+  icon: any;
+  active: boolean;
+  onPress: () => void;
+  size: number;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.chip,
+        { width: size, height: size, borderRadius: size / 2 },
+        active && styles.chipActive,
+      ]}
+      activeOpacity={0.85}
+    >
+      <MaterialCommunityIcons
+        name={icon}
+        size={Math.round(size * 0.5)}
+        color={active ? "#0C513F" : "#215F45"}
+      />
+    </TouchableOpacity>
+  );
+}
+
+// 5. UPDATE MENUCARD AGAR MENERIMA PROPS onPress
+function MenuCard({ name, desc, price, imageUri, hot, tag, width, imgHeight, onPress }: MenuItem & { width: number; imgHeight: number; onPress: () => void }) {
+  return (
+    // Ganti View jadi TouchableOpacity
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={[styles.card, { width }]}>
+      <Image source={{ uri: imageUri }} style={[styles.cardImage, { height: imgHeight }]} />
+
+      <View style={styles.cardText}>
+        <View style={styles.cardTopRow}>
+          {tag && (
+            <View style={styles.tagBadge}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          )}
+          {hot && (
+            <View style={styles.flameWrap}>
+              <Ionicons name="flame" size={14} color="#F59E0B" />
+            </View>
+          )}
+        </View>
+
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text style={styles.cardDesc} numberOfLines={2}>
+          {desc}
+        </Text>
+
+        <Text style={styles.cardPrice}>
+          <Text style={styles.rp}>Rp</Text> {price}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+  container: { flex: 1, backgroundColor: "#F5F7F6" },
+
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
+    paddingTop: 4,
+    paddingBottom: 10,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E8F2EB",
+  },
+  userMeta: { flex: 1 },
+  greeting: { fontSize: 16, fontWeight: "800", color: "#0C513F" },
+  subGreeting: { marginTop: 2, fontSize: 12, color: "#6B7280" },
+  metaBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignSelf: "flex-start",
+    backgroundColor: "#E8F2EB",
+    borderRadius: 14,
+  },
+  metaBadgeText: { fontSize: 11, color: "#0C513F", fontWeight: "600" },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1F8A45",
+  },
+  avatarText: { color: "#fff", fontWeight: "800", fontSize: 12 },
+
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
   },
   searchBar: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    paddingHorizontal: 15,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: "#EEF2F0",
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  searchInput: {
+  searchInput: { flex: 1, fontSize: 13, color: "#111", paddingVertical: 0 },
+  filterBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E8F2EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  bannerWrap: { marginTop: 6, position: "relative" },
+  banner: { width: "100%", borderRadius: 24, backgroundColor: "#E6ECE9" },
+
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+  },
+  infoCard: {
     flex: 1,
-    fontSize: 14,
-  },
-  bannerContainer: {
-    padding: 16,
-  },
-  bannerImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 20,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 20,
-  },
-  catCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#DCF7E3',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  catActive: {
-    backgroundColor: '#22C55E',
-    borderWidth: 3,
-    borderColor: '#DCF7E3',
-  },
-  menuSection: {
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  menuGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  card: {
-    width: '48%',
-    backgroundColor: '#DCF7E3',
-    borderRadius: 20,
-    padding: 10,
-    paddingTop: 0,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  hotBadge: {
-    position: 'absolute',
-    top: -10,
-    right: 10,
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 5,
-    elevation: 3,
-    zIndex: 1,
-  },
-  menuImage: {
-    width: 100,
-    height: 100,
-    marginTop: -20,
-  },
-  cardInfo: {
-    alignItems: 'flex-start',
-    width: '100%',
-    marginTop: 5,
-  },
-  menuName: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  menuDesc: {
-    fontSize: 10,
-    color: '#666',
-    marginVertical: 4,
-  },
-  menuPrice: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#166534',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  navActive: {
-    backgroundColor: '#DCF7E3',
-    padding: 10,
-    borderRadius: 20,
-  },
-  cartIcon: {
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#DCF7E3',
-    borderRadius: 10,
-    width: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    alignItems: "flex-start",
+    gap: 6,
     borderWidth: 1,
-    borderColor: '#22C55E',
+    borderColor: "#E5EBE7",
   },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  infoTitle: { fontSize: 13, fontWeight: "800", color: "#0C513F" },
+  infoSubtitle: { fontSize: 11, color: "#6B7280" },
+
+  chipsRow: {
+    marginTop: 18,
+    marginBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  chip: {
+    backgroundColor: "#E8F2EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chipActive: {
+    backgroundColor: "#D0E9D8",
+    borderWidth: 2,
+    borderColor: "#1F8A45",
+  },
+
+  sectionHeader: {
+    marginTop: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  sectionTitle: { fontSize: 17, fontWeight: "800", color: "#0C513F" },
+  sectionHint: { marginTop: 4, fontSize: 12, color: "#6B7280" },
+  sortBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#E8F2EB",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  sortText: { fontSize: 12, fontWeight: "700", color: "#0C513F" },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5EBE7",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  cardImage: { width: "100%", borderRadius: 14, backgroundColor: "#E6ECE9" },
+  cardText: { paddingHorizontal: 14, paddingVertical: 12 },
+  cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  tagBadge: {
+    backgroundColor: "#E8F2EB",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  tagText: { fontSize: 10, fontWeight: "800", color: "#0C513F" },
+  flameWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFF5E5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardTitle: { fontSize: 14, fontWeight: "800", color: "#0C513F" },
+  cardDesc: { marginTop: 4, fontSize: 12, color: "#6B7280" },
+  cardPrice: { marginTop: 12, fontSize: 18, fontWeight: "900", color: "#0C513F" },
+  rp: { fontSize: 11, fontWeight: "900" },
+
+  emptyState: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5EBE7",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  emptyText: { fontSize: 12, color: "#0C513F" },
+
+  bottomNav: {
+    height: 70,
+    borderTopWidth: 1,
+    borderColor: "#E5EBE7",
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  navItem: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
+  navActive: { backgroundColor: "#E8F2EB" },
+  cartWrap: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", position: 'relative' },
+  badge: {
+    position: "absolute",
+    right: -2,
+    top: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444", // Merah biar kelihatan
+    borderWidth: 1,
+    borderColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4
+  },
+  badgeText: { fontSize: 10, fontWeight: "900", color: "#fff" },
 });

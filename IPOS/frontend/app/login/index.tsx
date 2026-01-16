@@ -3,14 +3,19 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  Image,
+  ImageBackground,
   Pressable,
-  Alert
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,151 +24,288 @@ export default function Login() {
   const router = useRouter();
 
   const handleLogin = async () => {
-  try {
-    const res = await fetch('http://10.0.2.2:3000/api/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
+    try {
+      const res = await fetch("http://192.168.1.14:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      Alert.alert('Error', data.message);
-      return;
-    }
-
-    const userRole = data.user.role;
-    if (userRole === 'admin') {
-        router.replace("/admin/dashboard");
-      } else if (userRole === 'user') {
-        router.replace("/user/dashboard" as any);
-      } else {
-        Alert.alert('Error', 'Role tidak dikenali');
+      if (!res.ok) {
+        Alert.alert("Error", data.message);
+        return;
       }
 
-  } catch (err) {
-    console.error(err);
-    Alert.alert('Error', 'Server tidak dapat dihubungi');
-  }
-};
-  
+      const userRole = data.user.role;
+      if (userRole === "admin") {
+        router.replace("/admin/dashboard");
+      } else if (userRole === "user") {
+        router.replace("/user/dashboard" as any);
+      } else {
+        Alert.alert("Error", "Role tidak dikenali");
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Server tidak dapat dihubungi");
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* IMAGE */}
-      <Image
-        source={{
-          uri: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-        }}
-        style={styles.image}
-      />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <ImageBackground
+          source={{
+            uri: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+          }}
+          style={styles.image}
+          imageStyle={styles.imageStyle}
+        >
+          <View style={styles.imageOverlay} />
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>IPOS</Text>
+            <Text style={styles.heroSubtitle}>Login untuk melanjutkan</Text>
+          </View>
+        </ImageBackground>
 
-      {/* CARD */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Log In</Text>
+        <View style={styles.card}>
+          <Text style={styles.title}>Masuk</Text>
+          <Text style={styles.subtitle}>
+            Gunakan email dan password untuk masuk ke akun Anda.
+          </Text>
 
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-          placeholderTextColor="#999"
-        />
+          <Text style={styles.inputLabel}>Email</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="mail-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan email Anda"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            style={styles.passwordInput}
-          />
-          <Pressable onPress={() => setShowPassword(!showPassword)}>
+          <Text style={styles.inputLabel}>Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-closed-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan password Anda"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="#888"
+              />
+            </Pressable>
+          </View>
+
+          <Pressable style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Lupa password?</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleLogin}
+          >
+            <Text style={styles.buttonText}>Masuk</Text>
             <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#666"
+              name="arrow-forward"
+              size={18}
+              color="#fff"
+              style={styles.buttonIcon}
             />
           </Pressable>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>atau</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.signupRow}>
+            <Text style={styles.signupText}>Belum punya akun?</Text>
+            <Link href="/register" style={styles.signupLink}>
+              Daftar Sekarang
+            </Link>
+          </View>
         </View>
-
-        <Link href="/register" style={styles.signup}>
-          Sign Up
-        </Link>
-
-        <Pressable
-          style={styles.button}
-          onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </Pressable>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f5f5",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   image: {
     width: "100%",
-    height: "45%",
+    height: SCREEN_HEIGHT * 0.35,
+    justifyContent: "flex-end",
+  },
+  imageStyle: {
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  heroContent: {
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+  },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 1,
+  },
+  heroSubtitle: {
+    marginTop: 8,
+    fontSize: 16,
+    color: "rgba(255,255,255,0.85)",
+    fontWeight: "400",
   },
   card: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: "60%",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 24,
+    borderRadius: 24,
+    marginTop: -28,
+    marginHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "700",
-    marginBottom: 16,
-  },
-  input: {
-    backgroundColor: "#eee",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  passwordWrapper: {
-    backgroundColor: "#eee",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
+    color: "#1a1a1a",
     marginBottom: 8,
   },
-  passwordInput: {
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
+  },
+  inputField: {
     flex: 1,
     paddingVertical: 14,
-    fontSize: 16,
+    paddingLeft: 12,
+    fontSize: 15,
+    color: "#1a1a1a",
   },
-  signup: {
-    color: "#000",
-    marginBottom: 16,
-    fontSize: 14,
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 24,
+    marginTop: -8,
+  },
+  forgotPasswordText: {
+    color: "#666",
+    fontSize: 13,
+    fontWeight: "500",
   },
   button: {
-    backgroundColor: "#000",
-    paddingVertical: 14,
+    backgroundColor: "#1a1a1a",
+    paddingVertical: 16,
     borderRadius: 14,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   buttonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonIcon: {
+    marginLeft: 8,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  dividerText: {
+    color: "#999",
+    fontSize: 13,
+    marginHorizontal: 16,
+    fontWeight: "500",
+  },
+  signupRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  signupText: {
+    color: "#666",
+    fontSize: 14,
+    marginRight: 6,
+  },
+  signupLink: {
+    color: "#1a1a1a",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

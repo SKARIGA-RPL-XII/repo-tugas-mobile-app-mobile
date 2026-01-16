@@ -3,13 +3,19 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  Image,
+  ImageBackground,
   Pressable,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function Register() {
   const [nama, setNama] = useState("");
@@ -18,6 +24,7 @@ export default function Register() {
   const [noTelepon, setNoTelepon] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const handleRegister = async () => {
@@ -32,7 +39,7 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch("http://10.0.2.2:3000/api/auth/register", {
+      const res = await fetch("http://192.168.1.14:3000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,148 +70,294 @@ export default function Register() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* IMAGE */}
-      <Image
-        source={{
-          uri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
-        }}
-        style={styles.image}
-      />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <ImageBackground
+          source={{
+            uri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+          }}
+          style={styles.image}
+          imageStyle={styles.imageStyle}
+        >
+          <View style={styles.imageOverlay} />
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>IPOS</Text>
+            <Text style={styles.heroSubtitle}>Buat akun baru</Text>
+          </View>
+        </ImageBackground>
 
-      {/* CARD */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Sign Up</Text>
+        <View style={styles.card}>
+          <Text style={styles.title}>Daftar</Text>
+          <Text style={styles.subtitle}>
+            Lengkapi data di bawah untuk membuat akun baru.
+          </Text>
 
-        <TextInput
-          placeholder="Nama Lengkap"
-          value={nama}
-          onChangeText={setNama}
-          style={styles.input}
-          placeholderTextColor="#999"
-        />
+          <Text style={styles.inputLabel}>Nama Lengkap</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="person-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan nama lengkap"
+              value={nama}
+              onChangeText={setNama}
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-          placeholderTextColor="#999"
-        />
+          <Text style={styles.inputLabel}>Email</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="mail-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan email Anda"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-        <TextInput
-          placeholder="No Telepon"
-          value={noTelepon}
-          onChangeText={setNoTelepon}
-          keyboardType="phone-pad"
-          style={styles.input}
-          placeholderTextColor="#999"
-        />
+          <Text style={styles.inputLabel}>No. Telepon</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="call-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan nomor telepon"
+              value={noTelepon}
+              onChangeText={setNoTelepon}
+              keyboardType="phone-pad"
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+          </View>
 
-        {/* PASSWORD */}
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            style={styles.passwordInput}
-            placeholderTextColor="#999"
-          />
-          <Pressable onPress={() => setShowPassword(!showPassword)}>
+          <Text style={styles.inputLabel}>Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-closed-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Masukkan password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="#888"
+              />
+            </Pressable>
+          </View>
+
+          <Text style={styles.inputLabel}>Konfirmasi Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-closed-outline" size={20} color="#888" />
+            <TextInput
+              placeholder="Ulangi password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              style={styles.inputField}
+              placeholderTextColor="#aaa"
+            />
+            <Pressable
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="#888"
+              />
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleRegister}
+          >
+            <Text style={styles.buttonText}>Buat Akun</Text>
             <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#666"
+              name="arrow-forward"
+              size={18}
+              color="#fff"
+              style={styles.buttonIcon}
             />
           </Pressable>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>atau</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.loginRow}>
+            <Text style={styles.loginText}>Sudah punya akun?</Text>
+            <Link href="/login" style={styles.loginLink}>
+              Masuk
+            </Link>
+          </View>
         </View>
-
-        {/* CONFIRM PASSWORD */}
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showPassword}
-            style={styles.passwordInput}
-            placeholderTextColor="#999"
-          />
-        </View>
-
-        <Link href="/login" style={styles.signup}>
-          Already have an account? Log In
-        </Link>
-
-        <Pressable style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Create Account</Text>
-        </Pressable>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#f5f5f5",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   image: {
     width: "100%",
-    height: "45%",
+    height: SCREEN_HEIGHT * 0.28,
+    justifyContent: "flex-end",
+  },
+  imageStyle: {
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  heroContent: {
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+  },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: 1,
+  },
+  heroSubtitle: {
+    marginTop: 8,
+    fontSize: 16,
+    color: "rgba(255,255,255,0.85)",
+    fontWeight: "400",
   },
   card: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: "60%",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 24,
+    borderRadius: 24,
+    marginTop: -28,
+    marginHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "700",
-    marginBottom: 16,
+    color: "#1a1a1a",
+    marginBottom: 8,
   },
-  input: {
-    backgroundColor: "#eee",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    fontSize: 16,
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 24,
+    lineHeight: 20,
   },
-  passwordWrapper: {
-    backgroundColor: "#eee",
-    borderRadius: 12,
-    paddingHorizontal: 14,
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    backgroundColor: "#f8f8f8",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: "#e8e8e8",
   },
-  passwordInput: {
+  inputField: {
     flex: 1,
     paddingVertical: 14,
-    fontSize: 16,
-  },
-  signup: {
-    color: "#000",
-    marginBottom: 16,
-    fontSize: 14,
+    paddingLeft: 12,
+    fontSize: 15,
+    color: "#1a1a1a",
   },
   button: {
-    backgroundColor: "#000",
-    paddingVertical: 14,
+    backgroundColor: "#1a1a1a",
+    paddingVertical: 16,
     borderRadius: 14,
+    flexDirection: "row",
     alignItems: "center",
-    cursor: "pointer",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   buttonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonIcon: {
+    marginLeft: 8,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  dividerText: {
+    color: "#999",
+    fontSize: 13,
+    marginHorizontal: 16,
+    fontWeight: "500",
+  },
+  loginRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loginText: {
+    color: "#666",
+    fontSize: 14,
+    marginRight: 6,
+  },
+  loginLink: {
+    color: "#1a1a1a",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
