@@ -27,12 +27,17 @@ export default function AdminFooter() {
       </Pressable>
 
       {/* ORDER */}
-      <Pressable style={styles.item}>
+      <Pressable
+        style={[styles.item, isActive("/admin/list_meja") && styles.active]}
+        onPress={() => router.replace("/admin/list_meja")}
+      >
         <MaterialCommunityIcons name="table-chair" size={26} />
       </Pressable>
 
       {/* PROFILE */}
-      <Pressable style={styles.item}>
+      <Pressable style={[styles.item, isActive("/admin/list_user") && styles.active]}
+        onPress={() => router.replace("/admin/list_user")}
+      >
         <Ionicons name="person-outline" size={26} />
       </Pressable>
     </View>

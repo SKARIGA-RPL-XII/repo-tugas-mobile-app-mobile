@@ -2,9 +2,9 @@ const bcrypt = require('bcrypt');
 const db = require('./config/db');
 
 const adminData = {
-  nama: 'Ravlor',
-  email: 'ravlor@email.com',
-  password: '5553322',
+  nama: 'admin',
+  email: 'adm@email.com',
+  password: '1234567890',
   no_telepon: '08123456789',
   roles: 'admin'
 };

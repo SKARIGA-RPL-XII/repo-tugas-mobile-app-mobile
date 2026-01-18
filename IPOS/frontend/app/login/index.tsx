@@ -5,13 +5,13 @@ import {
   StyleSheet,
   Image,
   Pressable,
-  Alert
 } from "react-native";
 import { useState } from "react";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomAlert from "../components/customAlert";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,46 +19,86 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async () => {
-  try {
-    const res = await fetch('http://10.0.2.2:3000/api/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email,
-        password,
-      }),
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "error" as "success" | "error" | "warning",
+    title: "",
+    onConfirm: undefined as (() => void) | undefined,
+  });
+
+  const showAlert = (
+    type: "success" | "error" | "warning",
+    title: string,
+    onConfirm?: () => void,
+  ) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      onConfirm,
     });
+  };
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      Alert.alert('Error', data.message);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showAlert("error", "Email dan Password harus diisi");
       return;
     }
 
-    await AsyncStorage.setItem('token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    try {
+      const res = await fetch("http://10.0.2.2:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const userRole = data.user.role;
-    if (userRole === 'admin') {
-        router.replace("/admin/dashboard");
-      } else if (userRole === 'user') {
-        router.replace("/user/dashboard");
-      } else {
-        Alert.alert('Error', 'Role tidak dikenali');
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert("error", data.message || "Login Gagal");
+        return;
       }
 
-  } catch (err) {
-    console.error(err);
-    Alert.alert('Error', 'Server tidak dapat dihubungi');
-  }
-};
-  
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data.user));
+
+      showAlert("success", "Login Berhasil!", () => {
+        const userRole = data.user.role;
+        if (userRole === "admin") {
+          router.replace("/admin/dashboard");
+        } else if (userRole === "user") {
+          router.replace("/user/dashboard");
+        } else {
+          showAlert("error", "Role tidak dikenali");
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      showAlert("error", "Server tidak dapat dihubungi");
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* IMAGE */}
+      {/* Komponen CustomAlert */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        onClose={() => {
+          if (alertConfig.onConfirm) {
+            alertConfig.onConfirm();
+          }
+          setAlertConfig({ ...alertConfig, visible: false });
+        }}
+        onConfirm={() => {
+          if (alertConfig.onConfirm) {
+            alertConfig.onConfirm();
+          }
+          setAlertConfig({ ...alertConfig, visible: false });
+        }}
+      />
+
       <Image
         source={{
           uri: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
@@ -66,7 +106,6 @@ export default function Login() {
         style={styles.image}
       />
 
-      {/* CARD */}
       <View style={styles.card}>
         <Text style={styles.title}>Log In</Text>
 
@@ -101,15 +140,14 @@ export default function Login() {
           Sign Up
         </Link>
 
-        <Pressable
-          style={styles.button}
-          onPress={handleLogin}>
+        <Pressable style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </Pressable>
       </View>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
