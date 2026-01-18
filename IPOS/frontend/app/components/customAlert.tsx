@@ -20,7 +20,7 @@ export default function CustomAlert({
   const getIcon = () => {
     switch (type) {
       case "warning":
-        return { name: "alert-circle-outline", color: "#000" }; // Hitam sesuai gambar contohmu
+        return { name: "alert-circle-outline", color: "#000" };
       case "success":
         return { name: "checkmark-circle-outline", color: "#000" };
       case "error":
@@ -36,15 +36,11 @@ export default function CustomAlert({
     <Modal transparent visible={visible} animationType="fade">
       <View style={alertStyles.overlay}>
         <View style={alertStyles.alertContainer}>
-          {/* Ikon Utama */}
           <Ionicons name={icon.name as any} size={100} color="black" />
 
-          {/* Teks Pesan */}
           <Text style={alertStyles.title}>{title}</Text>
 
-          {/* Container Tombol */}
           <View style={alertStyles.buttonContainer}>
-            {/* Tombol Batal: Hanya muncul jika tipe 'warning' (seperti Logout) */}
             {type === "warning" && (
               <TouchableOpacity
                 style={[alertStyles.button, { backgroundColor: "#ddd" }]}
@@ -54,19 +50,24 @@ export default function CustomAlert({
               </TouchableOpacity>
             )}
 
-            {/* Tombol Oke: Selalu muncul */}
             <TouchableOpacity
               style={[
                 alertStyles.button,
-                { 
-                  backgroundColor: "#FEF987", 
-                  // Jika sukses, buat tombol lebih lebar/proporsional karena sendirian
-                  paddingHorizontal: type === "success" ? 60 : 35 
+                {
+                  backgroundColor: "#FEF987",
+                  flex: type === "warning" ? 0 : 1,
+                  minWidth: type === "warning" ? 100 : "80%",
                 },
               ]}
-              onPress={onConfirm || onClose}
+              onPress={() => {
+                if (onConfirm) {
+                  onConfirm();
+                } else {
+                  onClose();
+                }
+              }}
             >
-              <Text style={alertStyles.buttonText}>Oke</Text>
+              <Text style={alertStyles.buttonText}>ok</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -78,17 +79,15 @@ export default function CustomAlert({
 const alertStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)", // Membuat background jadi gelap transparan
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   alertContainer: {
     width: "80%",
     backgroundColor: "#fff",
-    borderRadius: 25, // Lebih bulat sesuai gambar
     padding: 30,
     alignItems: "center",
-    // Shadow untuk iOS & Android
     elevation: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
@@ -102,25 +101,26 @@ const alertStyles = StyleSheet.create({
     textAlign: "center",
     color: "#000",
   },
-  buttonContainer: { 
-    flexDirection: "row", 
+  buttonContainer: {
+    flexDirection: "row",
     gap: 15,
     justifyContent: "center",
-    width: "100%"
+    width: "100%",
   },
   button: {
     paddingVertical: 12,
     paddingHorizontal: 35,
-    borderRadius: 15, // Bentuk tombol kotak membulat
+    borderRadius: 15, 
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
-  buttonText: { 
-    fontWeight: "bold", 
-    fontSize: 18, 
-    color: "#000" 
+  buttonText: {
+    fontWeight: "bold",
+    fontSize: 18,
+    textAlign: "center",
+    color: "#000",
   },
 });

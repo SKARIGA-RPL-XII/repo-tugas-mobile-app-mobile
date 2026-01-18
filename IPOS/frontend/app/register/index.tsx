@@ -1,15 +1,9 @@
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Image,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, Image, Pressable,} from "react-native";
 import { useState } from "react";
 import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import CustomAlert from "../components/customAlert";
+
 
 export default function Register() {
   const [nama, setNama] = useState("");
@@ -20,14 +14,30 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: 'error' as 'success' | 'error' | 'warning',
+    title: '',
+    onConfirm: undefined as (() => void) | undefined
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'warning', title: string, onConfirm?: () => void) => {
+    setAlertConfig({
+      visible: true,
+      type,
+      title,
+      onConfirm
+    });
+  };
+
   const handleRegister = async () => {
     if (!nama || !noTelepon || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Semua field wajib diisi");
+      showAlert("error", "Semua field wajib diisi");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Password tidak sama");
+      showAlert("error", "Password tidak sama");
       return;
     }
 
@@ -46,33 +56,42 @@ export default function Register() {
       const data = await res.json();
 
       if (!res.ok) {
-        Alert.alert("Gagal", data.message || "Register gagal");
+        showAlert("error", data.message || "Register gagal");
         return;
       }
 
-      Alert.alert("Berhasil", "Akun berhasil dibuat", [
-        {
-          text: "OK",
-          onPress: () => router.replace("/login"),
-        },
-      ]);
+      // Berhasil Register
+      showAlert("success", "Akun berhasil dibuat", () => {
+        router.replace("/login");
+      });
+
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", "Server tidak dapat dihubungi");
+      showAlert("error", "Server tidak dapat dihubungi");
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* IMAGE */}
-      <Image
-        source={{
-          uri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+      {/* Komponen CustomAlert */}
+      <CustomAlert 
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        onClose={() => setAlertConfig({ ...alertConfig, visible: false })}
+        onConfirm={() => {
+          if (alertConfig.onConfirm) {
+            alertConfig.onConfirm();
+          }
+          setAlertConfig({ ...alertConfig, visible: false });
         }}
+      />
+
+      <Image
+        source={{ uri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836" }}
         style={styles.image}
       />
 
-      {/* CARD */}
       <View style={styles.card}>
         <Text style={styles.title}>Sign Up</Text>
 
@@ -103,7 +122,6 @@ export default function Register() {
           placeholderTextColor="#999"
         />
 
-        {/* PASSWORD */}
         <View style={styles.passwordWrapper}>
           <TextInput
             placeholder="Password"
@@ -122,7 +140,6 @@ export default function Register() {
           </Pressable>
         </View>
 
-        {/* CONFIRM PASSWORD */}
         <View style={styles.passwordWrapper}>
           <TextInput
             placeholder="Confirm Password"
