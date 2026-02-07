@@ -5,18 +5,47 @@ const path = require("path");
 
 exports.getStats = async (req, res) => {
   try {
-    const [userResult] = await db.query("SELECT COUNT(*) as total FROM users");
-    const [menuResult] = await db.query("SELECT COUNT(*) as total FROM menus");
-    const [mejaResult] = await db.query("SELECT COUNT(*) as total FROM meja");
+    const [userCount] = await db.query('SELECT COUNT(*) as total FROM users');
+    const [menuCount] = await db.query('SELECT COUNT(*) as total FROM menus');
+    const [tableCount] = await db.query('SELECT COUNT(*) as total FROM meja');
 
-    res.status(200).json({
-      totalUsers: userResult[0].total,
-      totalMenus: menuResult[0].total,
-      totalTables: mejaResult[0].total,
+    const [orders] = await db.query(`
+      SELECT 
+        o.id, 
+        o.create_at as created_at, 
+        GROUP_CONCAT(m.nama SEPARATOR ', ') as items, 
+        o.total_harga 
+      FROM orders o
+      JOIN detail_order d ON o.id = d.order_id
+      JOIN menus m ON d.menu_id = m.id
+      WHERE o.status_order = 'sudah' 
+      GROUP BY o.id
+      ORDER BY o.create_at DESC 
+      LIMIT 5
+    `);
+
+    // 3. Ambil Penghasilan Bulanan untuk Chart
+    // Menggunakan kolom 'create_at' sesuai gambar struktur tabel Anda
+    const [income] = await db.query(`
+      SELECT 
+        MONTHNAME(create_at) as bulan, 
+        SUM(total_harga) as total 
+      FROM orders 
+      WHERE status_order = 'sudah' 
+      GROUP BY MONTH(create_at), MONTHNAME(create_at)
+      ORDER BY MONTH(create_at) ASC
+    `);
+
+    res.json({
+      totalUsers: userCount[0].total,
+      totalMenus: menuCount[0].total,
+      totalTables: tableCount[0].total,
+      latestOrders: orders,
+      monthlyIncome: income
     });
   } catch (error) {
-    console.error("Error Dashboard Stats:", error);
-    res.status(500).json({ message: "Server Error saat mengambil statistik" });
+    console.error("Backend Error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 

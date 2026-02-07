@@ -56,3 +56,23 @@ exports.deleteMeja = async (req, res) => {
         res.status(500).json({ message: "Gagal menghapus meja" });
     }
 };
+
+exports.updateTableStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const [result] = await db.query(
+      'UPDATE meja SET status = ? WHERE id = ?',
+      [status, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Meja tidak ditemukan' });
+    }
+
+    res.json({ success: true, message: 'Status meja berhasil diperbarui' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
